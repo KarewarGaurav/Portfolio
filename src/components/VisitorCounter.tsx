@@ -7,11 +7,18 @@ export function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
+    // Try to load cached count immediately for a faster UI experience
+    const cachedCount = localStorage.getItem("visitor_count");
+    if (cachedCount) {
+      setCount(parseInt(cachedCount, 10));
+    }
+
     fetch("/api/visitor")
       .then((res) => res.json())
       .then((data) => {
         if (typeof data.count === "number" && data.count >= 0) {
           setCount(data.count);
+          localStorage.setItem("visitor_count", data.count.toString());
         }
       })
       .catch((err) => console.error("Failed to fetch visitor count", err));
@@ -19,11 +26,10 @@ export function VisitorCounter() {
 
   if (count === null) {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground opacity-50 shadow-sm transition-all">
-        <div className="rounded-full bg-accent text-accent-foreground p-1 flex items-center justify-center">
+      <div className="flex items-center gap-2 rounded-full border border-border/40 bg-card/40 px-3 py-1.5 h-8 shadow-sm transition-all w-[140px] animate-pulse">
+        <div className="rounded-full bg-accent text-accent-foreground p-1 flex items-center justify-center opacity-50">
           <Eye size={14} />
         </div>
-        <span className="animate-pulse">Loading count...</span>
       </div>
     );
   }
