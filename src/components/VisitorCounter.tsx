@@ -14,7 +14,14 @@ export function VisitorCounter() {
     }
 
     fetch("/api/visitor")
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(errorText || `Request failed with status ${res.status}`);
+        }
+
+        return res.json();
+      })
       .then((data) => {
         if (typeof data.count === "number" && data.count >= 0) {
           setCount(data.count);

@@ -1,93 +1,93 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
-import fs from 'fs';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { promises as fs } from 'fs';
 import path from 'path';
 
-// Add the pool cache to the global object to prevent 
-// multiple connections during hot-reloading in dev.
-declare global {
-  var pool: Pool | undefined;
-  var lastDbUrl: string | undefined;
-}
+const VISITOR_FILE_PATH = path.join(process.cwd(), '.visitors.json');
 
-const VISITOR_FILE = path.join(process.cwd(), '.visitors.json');
+type VisitorStore = {
+  count: number;
+  ips: string[];
+};
 
-// Ensure we don't create multiple connection pools in development
-// Re-initialize if the DATABASE_URL has changed
-if (!global.pool || global.lastDbUrl !== process.env.DATABASE_URL) {
-  if (global.pool) {
-    global.pool.end().catch(err => console.error("Error closing old pool", err));
+function getFirebaseDbOrNull() {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const hasFirebaseCredentials = Boolean(projectId) && Boolean(clientEmail) && Boolean(privateKey);
+
+  if (!hasFirebaseCredentials) {
+    return null;
   }
-  global.pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    // Note: Supabase requires SSL for external connections
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5000 // 5s timeout to trigger fallback quickly
-  });
-  global.lastDbUrl = process.env.DATABASE_URL;
-}
-const pool = global.pool;
 
-// Local fallback logic
-async function getLocalVisitorCount(ip: string) {
+  if (getApps().length === 0) {
+    initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey: privateKey!.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+
+  return getFirestore();
+}
+
+async function readVisitorStore(): Promise<VisitorStore> {
   try {
-    let data = { count: 0, ips: [] as string[] };
-    if (fs.existsSync(VISITOR_FILE)) {
-      data = JSON.parse(fs.readFileSync(VISITOR_FILE, 'utf-8'));
-    }
-    
-    if (!data.ips.includes(ip)) {
-      data.ips.push(ip);
-      data.count = data.ips.length;
-      fs.writeFileSync(VISITOR_FILE, JSON.stringify(data, null, 2));
-    }
-    
-    return data.count;
-  } catch (err) {
-    console.error("Local visitor counter error", err);
-    return 1;
+    const rawData = await fs.readFile(VISITOR_FILE_PATH, 'utf-8');
+    const parsedData = JSON.parse(rawData) as Partial<VisitorStore>;
+    const ips = Array.isArray(parsedData.ips)
+      ? parsedData.ips.filter((value): value is string => typeof value === 'string')
+      : [];
+    return {
+      count: ips.length,
+      ips,
+    };
+  } catch {
+    return { count: 0, ips: [] };
   }
+}
+
+async function writeVisitorStore(store: VisitorStore): Promise<void> {
+  await fs.writeFile(VISITOR_FILE_PATH, JSON.stringify(store, null, 2), 'utf-8');
 }
 
 export async function GET(req: Request) {
   let ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '127.0.0.1';
-  
-  // In case there are multiple IPs in the header, get the first one
+
   if (ip.includes(',')) {
     ip = ip.split(',')[0].trim();
   }
 
   try {
-    const client = await pool.connect();
-    
-    try {
-      // 1. Create the table if it does not exist
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS visitors (
-          ip VARCHAR(255) PRIMARY KEY,
-          visited_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
+    const db = getFirebaseDbOrNull();
+    if (db) {
+      const visitorRef = db.collection('visitors').doc(ip);
+      const visitorDoc = await visitorRef.get();
 
-      // 2. Insert the IP if it's new (Do nothing if it already exists)
-      await client.query(`
-        INSERT INTO visitors (ip) 
-        VALUES ($1) 
-        ON CONFLICT (ip) DO NOTHING;
-      `, [ip]);
+      if (!visitorDoc.exists) {
+        await visitorRef.set({
+          ip,
+          visitedAt: new Date().toISOString(),
+        });
+      }
 
-      // 3. Get the total count of unique visitors
-      const result = await client.query('SELECT COUNT(*) as count FROM visitors;');
-      const count = parseInt(result.rows[0].count, 10);
-
+      const visitorsSnapshot = await db.collection('visitors').count().get();
+      const count = visitorsSnapshot.data().count;
       return NextResponse.json({ count });
-    } finally {
-      client.release(); // Return the client to the connection pool
     }
-  } catch (error) {
-    console.warn("Supabase visitor counter failed, using local fallback", error instanceof Error ? error.message : error);
-    const count = await getLocalVisitorCount(ip);
+
+    const visitorStore = await readVisitorStore();
+    const uniqueIps = new Set(visitorStore.ips);
+    uniqueIps.add(ip);
+    const count = uniqueIps.size;
+    await writeVisitorStore({ count, ips: Array.from(uniqueIps) });
     return NextResponse.json({ count });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown visitor API error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

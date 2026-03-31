@@ -1,8 +1,26 @@
-import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+function getFirebaseDb() {
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
+    throw new Error('Missing Firebase Admin credentials');
+  }
+
+  if (getApps().length === 0) {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+
+  return getFirestore();
+}
 
 export async function POST(req: Request) {
-  const resend = new Resend(process.env.RESEND_API_KEY);
   try {
     const { name, email, message } = await req.json();
 
@@ -13,38 +31,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data, error } = await resend.emails.send({
-      from: 'Portfolio Contact <onboarding@resend.dev>', // Resend's default sender for testing
-      to: ['gauravkarewar724@gmail.com'],
-      replyTo: email,
-      subject: `New Message from ${name} via Portfolio`,
-      html: `
-        <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #000; border-bottom: 2px solid #eee; padding-bottom: 10px;">New Contact Form Submission</h2>
-          
-          <p style="margin-top: 20px;"><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-          
-          <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; border-left: 4px solid #000;">
-            <p style="margin: 0; font-weight: bold; margin-bottom: 10px;">Message:</p>
-            <p style="margin: 0; line-height: 1.6;">${message}</p>
-          </div>
-          
-          <p style="margin-top: 30px; font-size: 12px; color: #888;">
-            This message was sent from your portfolio contact form.
-          </p>
-        </div>
-      `,
-    });
+    const db = getFirebaseDb();
+    const data = {
+      name,
+      email,
+      message,
+      createdAt: new Date().toISOString(),
+      source: 'portfolio-contact-form',
+    };
 
-    if (error) {
-      console.error('Resend Error:', error);
-      return NextResponse.json({ error }, { status: 500 });
-    }
+    await db.collection('contactMessages').add(data);
 
-    return NextResponse.json({ message: 'Email sent successfully', data });
-  } catch (error: any) {
-    console.error('Contact API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ message: 'Message saved successfully', data });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown contact API error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
