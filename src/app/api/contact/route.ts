@@ -2,17 +2,33 @@ import { NextResponse } from 'next/server';
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
+export async function GET() {
+  return NextResponse.json(
+    {
+      message: 'Contact API is running',
+      method: 'Use POST to submit contact form data',
+    },
+    { status: 200 }
+  );
+}
+
 function getFirebaseDb() {
   if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
     throw new Error('Missing Firebase Admin credentials');
   }
 
   if (getApps().length === 0) {
+    const sanitizedPrivateKey = process.env.FIREBASE_PRIVATE_KEY
+      .trim()
+      .replace(/^"|"$/g, '')
+      .replace(/\\n/g, '\n')
+      .replace(/\r/g, '');
+
     initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey: sanitizedPrivateKey,
       }),
     });
   }
