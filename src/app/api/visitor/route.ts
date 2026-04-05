@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -20,13 +18,16 @@ const FIREBASE_CONFIG = {
   privateKey: process.env.FIREBASE_PRIVATE_KEY,
 };
 
-function getFirebaseDbOrNull() {
+async function getFirebaseDbOrNull() {
   const { projectId, clientEmail, privateKey } = FIREBASE_CONFIG;
   const hasCredentials = Boolean(projectId) && Boolean(clientEmail) && Boolean(privateKey);
 
   if (!hasCredentials) return null;
 
   try {
+    const { cert, getApps, initializeApp } = await import('firebase-admin/app');
+    const { getFirestore } = await import('firebase-admin/firestore');
+
     if (getApps().length === 0) {
       let sanitizedPrivateKey = privateKey!
         .trim()
@@ -81,7 +82,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const db = getFirebaseDbOrNull();
+    const db = await getFirebaseDbOrNull();
     if (db) {
       try {
         // FAST PATH: Start the write in parallel, don't wait for it if we just need the count
