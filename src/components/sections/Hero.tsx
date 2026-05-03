@@ -36,7 +36,7 @@ export default function Hero() {
             <Linkedin className="text-lg text-[#0A66C2] group-hover:scale-110 transition-transform" />
             <span className="text-sm font-medium text-zinc-100">LinkedIn</span>
           </a>
-          <a href="/resume.pdf" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 transition-all group">
+          <a href="/Resume%20AI.pdf" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 transition-all group">
             <FileText className="text-lg text-[#A855F7] group-hover:scale-110 transition-transform" />
             <span className="text-sm font-medium text-zinc-100">Resume / CV</span>
           </a>

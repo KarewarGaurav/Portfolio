@@ -18,10 +18,14 @@ function getEnvVar(name: string) {
 async function getFirebaseDbOrNull() {
   const projectId = getEnvVar('FIREBASE_PROJECT_ID');
   const clientEmail = getEnvVar('FIREBASE_CLIENT_EMAIL');
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const privateKey = getEnvVar('FIREBASE_PRIVATE_KEY');
+  
   const hasCredentials = Boolean(projectId) && Boolean(clientEmail) && Boolean(privateKey);
 
-  if (!hasCredentials) return null;
+  if (!hasCredentials) {
+    console.warn('Firebase credentials missing. Check your .env file or environment variables.');
+    return null;
+  }
 
   try {
     const { cert, getApps, initializeApp } = await import('firebase-admin/app');
@@ -30,7 +34,6 @@ async function getFirebaseDbOrNull() {
     if (getApps().length === 0) {
       let sanitizedPrivateKey = privateKey!
         .trim()
-        .replace(/^"|"$/g, '')
         .replace(/\\n/g, '\n')
         .replace(/\r/g, '');
 
@@ -47,10 +50,11 @@ async function getFirebaseDbOrNull() {
           privateKey: sanitizedPrivateKey,
         }),
       });
+      console.log('Firebase initialized successfully');
     }
     return getFirestore();
   } catch (error) {
-    console.error('Firebase initialization error:', error);
+    console.error('Firebase initialization error details:', error instanceof Error ? error.message : error);
     return null;
   }
 }
