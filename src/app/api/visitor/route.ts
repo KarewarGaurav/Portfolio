@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { tmpdir } from 'os';
 
-const VISITOR_FILE_PATH = path.join(process.cwd(), '.visitors.json');
+/** Writable on serverless / read-only image roots; cwd is often not writable in production. */
+const VISITOR_FILE_PATH = path.join(tmpdir(), 'portfolio-web-visitors.json');
 
 type VisitorStore = {
   count: number;
   ips: string[];
 };
 
-// Helper to sanitize environment variables once
-const getEnvVar = (name: string) => process.env[name]?.replace(/^"|"$/g, '').trim();
-
-const FIREBASE_CONFIG = {
-  projectId: getEnvVar('FIREBASE_PROJECT_ID'),
-  clientEmail: getEnvVar('FIREBASE_CLIENT_EMAIL'),
-  privateKey: process.env.FIREBASE_PRIVATE_KEY,
-};
+function getEnvVar(name: string) {
+  return process.env[name]?.replace(/^"|"$/g, '').trim();
+}
 
 async function getFirebaseDbOrNull() {
-  const { projectId, clientEmail, privateKey } = FIREBASE_CONFIG;
+  const projectId = getEnvVar('FIREBASE_PROJECT_ID');
+  const clientEmail = getEnvVar('FIREBASE_CLIENT_EMAIL');
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
   const hasCredentials = Boolean(projectId) && Boolean(clientEmail) && Boolean(privateKey);
 
   if (!hasCredentials) return null;
@@ -32,8 +31,9 @@ async function getFirebaseDbOrNull() {
       let sanitizedPrivateKey = privateKey!
         .trim()
         .replace(/^"|"$/g, '')
-        .replace(/\\n/g, '\n');
-      
+        .replace(/\\n/g, '\n')
+        .replace(/\r/g, '');
+
       if (!sanitizedPrivateKey.includes('\n')) {
         sanitizedPrivateKey = sanitizedPrivateKey
           .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
@@ -55,6 +55,15 @@ async function getFirebaseDbOrNull() {
   }
 }
 
+function aggregateCountToNumber(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value !== '') return Number(value) || 0;
+  if (value != null && typeof value === 'object' && 'toNumber' in value && typeof (value as { toNumber: () => number }).toNumber === 'function') {
+    return (value as { toNumber: () => number }).toNumber();
+  }
+  return Number(value) || 0;
+}
+
 async function readVisitorStore(): Promise<VisitorStore> {
   try {
     const rawData = await fs.readFile(VISITOR_FILE_PATH, 'utf-8');
@@ -72,6 +81,14 @@ async function writeVisitorStore(store: VisitorStore): Promise<void> {
   await fs.writeFile(VISITOR_FILE_PATH, JSON.stringify(store, null, 2), 'utf-8');
 }
 
+async function persistVisitorStore(store: VisitorStore): Promise<void> {
+  try {
+    await writeVisitorStore(store);
+  } catch (err) {
+    console.warn('Visitor count file write failed (read-only or quota):', err instanceof Error ? err.message : String(err));
+  }
+}
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -85,20 +102,17 @@ export async function GET(req: Request) {
     const db = await getFirebaseDbOrNull();
     if (db) {
       try {
-        // FAST PATH: Start the write in parallel, don't wait for it if we just need the count
-        // Using set with merge: true ensures we don't duplicate documents and don't need a .get() check
-        const writePromise = db.collection('visitors').doc(ip).set({
-          ip,
-          lastVisited: new Date().toISOString(),
-        }, { merge: true });
+        const col = db.collection('visitors');
+        await col.doc(ip).set(
+          {
+            ip,
+            lastVisited: new Date().toISOString(),
+          },
+          { merge: true }
+        );
 
-        // Get the current total count
-        const visitorsSnapshot = await db.collection('visitors').count().get();
-        const count = visitorsSnapshot.data().count;
-
-        // Ensure the write completes before we finish if we want strict consistency, 
-        // but for a portfolio counter, let's keep it fast.
-        await writePromise; 
+        const visitorsSnapshot = await col.count().get();
+        const count = aggregateCountToNumber(visitorsSnapshot.data().count);
 
         return NextResponse.json({ count });
       } catch (dbError) {
@@ -106,16 +120,26 @@ export async function GET(req: Request) {
       }
     }
 
-    // LOCAL STORAGE FALLBACK
-    const visitorStore = await readVisitorStore();
-    const uniqueIps = new Set(visitorStore.ips);
-    uniqueIps.add(ip);
-    const count = uniqueIps.size;
-    await writeVisitorStore({ count, ips: Array.from(uniqueIps) });
-    return NextResponse.json({ count });
+    // File fallback (tmp dir — works on many serverless / container hosts)
+    try {
+      const visitorStore = await readVisitorStore();
+      const uniqueIps = new Set(visitorStore.ips);
+      uniqueIps.add(ip);
+      const count = uniqueIps.size;
+      
+      // We don't await this to avoid blocking the response if it fails
+      persistVisitorStore({ count, ips: Array.from(uniqueIps) }).catch(err => {
+        console.warn('Silent persistence failure:', err);
+      });
+      
+      return NextResponse.json({ count });
+    } catch (fallbackError) {
+      console.error('Visitor fallback failed:', fallbackError);
+      return NextResponse.json({ count: 1 }); // Return a default value instead of 500
+    }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown visitor API error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Top level visitor API error:', error);
+    return NextResponse.json({ count: 1 }); // Always return something valid to the UI
   }
 }
 

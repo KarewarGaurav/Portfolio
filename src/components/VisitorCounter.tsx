@@ -5,15 +5,19 @@ import { Eye } from "lucide-react";
 
 export function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     // Try to load cached count immediately for a faster UI experience
     const cachedCount = localStorage.getItem("visitor_count");
     if (cachedCount) {
-      setCount(parseInt(cachedCount, 10));
+      const parsed = parseInt(cachedCount, 10);
+      if (!Number.isNaN(parsed) && parsed >= 0) {
+        setCount(parsed);
+      }
     }
 
-    fetch("/api/visitor")
+    fetch("/api/visitor", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) {
           const errorText = await res.text();
@@ -26,10 +30,26 @@ export function VisitorCounter() {
         if (typeof data.count === "number" && data.count >= 0) {
           setCount(data.count);
           localStorage.setItem("visitor_count", data.count.toString());
+        } else {
+          setLoadFailed(true);
         }
       })
-      .catch((err) => console.error("Failed to fetch visitor count", err));
+      .catch((err) => {
+        console.error("Failed to fetch visitor count", err);
+        setLoadFailed(true);
+      });
   }, []);
+
+  if (count === null && loadFailed) {
+    return (
+      <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
+        <div className="rounded-full bg-accent/50 text-foreground p-1 flex items-center justify-center">
+          <Eye size={14} />
+        </div>
+        <span>Thanks for visiting</span>
+      </div>
+    );
+  }
 
   if (count === null) {
     return (
