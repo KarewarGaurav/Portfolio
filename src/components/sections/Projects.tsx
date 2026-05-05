@@ -306,7 +306,7 @@ export function ProjectCard({ project, idx }: { project: Project; idx: number })
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: idx * 0.1 }}
       >
-        <Card className="flex flex-col h-full bg-[#0a0a0a] border-zinc-800/80 hover:border-zinc-700 transition-all duration-300 overflow-hidden group rounded-3xl hover:shadow-[0_0_30px_rgba(255,255,255,0.02)]">
+        <Card className="flex flex-col h-full bg-white/[0.01] backdrop-blur-xl border-white/[0.08] hover:border-white/[0.15] transition-all duration-500 overflow-hidden group rounded-3xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
           <StyledTooltip title={project.video ? "Click to Watch Demo" : "Project Preview"} arrow placement="top">
             <div
               className={`h-[240px] w-full ${project.coverImage ? '' : project.imagePlaceholder || 'bg-zinc-900'} flex items-center justify-center relative overflow-hidden cursor-pointer`}
@@ -330,10 +330,23 @@ export function ProjectCard({ project, idx }: { project: Project; idx: number })
               )}
 
               {/* Category Badge */}
-              <div className="absolute top-4 left-4 z-30 px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
-                {project.category === 'AI' && <Sparkles size={12} className="text-blue-400" />}
+              <motion.div 
+                className="absolute top-4 left-4 z-30 px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2"
+                animate={project.category === 'AI' ? {
+                  boxShadow: ["0 0 0px rgba(59, 130, 246, 0)", "0 0 10px rgba(59, 130, 246, 0.3)", "0 0 0px rgba(59, 130, 246, 0)"],
+                } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {project.category === 'AI' && (
+                  <motion.div
+                    animate={{ rotate: [0, 15, -15, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <Sparkles size={12} className="text-blue-400" />
+                  </motion.div>
+                )}
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">{project.category}</span>
-              </div>
+              </motion.div>
 
               <div
                 className="absolute inset-0 transition-opacity duration-500"
@@ -367,7 +380,7 @@ export function ProjectCard({ project, idx }: { project: Project; idx: number })
             </div>
           </StyledTooltip>
 
-          <CardContent className="flex flex-col flex-grow p-5 pt-5 bg-[#0a0a0a]">
+          <CardContent className="flex flex-col flex-grow p-5 pt-5 bg-transparent">
             <div className="flex flex-row items-center justify-between mb-4">
               <h3 className="text-[22px] font-bold tracking-tight text-white">{project.title}</h3>
               <div className="flex items-center gap-3 text-zinc-400">
@@ -478,7 +491,19 @@ export default function Projects() {
         {/* AI Projects Section */}
         <div className="mb-16">
           <div className="flex items-center gap-3 mb-8">
-            <Sparkles size={20} className="text-blue-500" />
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={{ 
+                duration: 4, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Sparkles size={20} className="text-blue-500" />
+            </motion.div>
             <h3 className="text-xl font-bold text-zinc-200 uppercase tracking-widest text-sm">AI Projects</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
