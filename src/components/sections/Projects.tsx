@@ -1,14 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Globe, Github, Play, ArrowRight, X, Volume2, VolumeX, Maximize, Minimize, Pause } from "lucide-react";
+import { Globe, Github, Play, ArrowRight, X, Volume2, VolumeX, Maximize, Minimize, Pause, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Tooltip from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
 import { useRef, useState, useCallback, useEffect } from "react";
-import { SiReact, SiFirebase, SiExpress, SiPostgresql, SiVite, SiMongodb, SiNodedotjs } from "react-icons/si";
-import { FaDatabase, FaCreditCard } from "react-icons/fa";
+import Link from "next/link";
+import { projects, Project } from "@/lib/projectsData";
 
 const StyledTooltip = styled(({ className, ...props }: any) => (
   <Tooltip {...props} classes={{ popper: className }} />
@@ -31,92 +31,6 @@ const StyledTooltip = styled(({ className, ...props }: any) => (
     },
   },
 }));
-
-const projects = [
-  {
-    title: "Zica-Zima CRM",
-    description: "Full-stack CRM platform for education centers with student and lead management, fee collection, batch tracking, and role-based access.",
-    techIcons: [
-      { name: "Vite", icon: SiVite, color: "#646CFF" },
-      { name: "React", icon: SiReact, color: "#61DAFB" },
-      { name: "Express", icon: SiExpress, color: "#ffffff" },
-      { name: "Firebase", icon: SiFirebase, color: "#FFCA28" }
-    ],
-    github: "https://github.com/KarewarGaurav/Zica-Zima-CRM",
-    status: {
-      label: "All Operational",
-      color: "text-orange-900 font-bold",
-      bg: "bg-orange-100",
-      dot: "bg-orange-600",
-      border: "border-transparent"
-    },
-    imagePlaceholder: "bg-[#161618]",
-    coverImage: "/image.png",
-    video: "/zica-zima-crm.mp4",
-  },
-  {
-    title: "Vitrag Lab System",
-    description: "Laboratory management platform for construction material testing with real-time sample tracking and automated PDF report generation.",
-    techIcons: [
-      { name: "React", icon: SiReact, color: "#61DAFB" },
-      { name: "PostgreSQL", icon: SiPostgresql, color: "#4169E1" }
-    ],
-    github: "https://github.com/KarewarGaurav/Vitrag-Lab-System",
-    status: {
-      label: "Completed",
-      color: "text-emerald-900 font-bold",
-      bg: "bg-emerald-100",
-      dot: "bg-emerald-600",
-      border: "border-transparent"
-    },
-    imagePlaceholder: "bg-gradient-to-br from-zinc-800 to-black",
-    coverImage: "/vitrag-preview.png",
-    video: "/vitrag-video1.mp4",
-  },
-  {
-    title: "Path2Placement",
-    description: "Built a multi-role e-learning platform with course purchases, test series, and internships. Implemented secure management, real-time data, and user authentication.",
-    techIcons: [
-      { name: "React", icon: SiReact, color: "#61DAFB" },
-      { name: "Firebase", icon: SiFirebase, color: "#FFCA28" },
-      { name: "MongoDB Atlas", icon: SiMongodb, color: "#47A248" }
-    ],
-    github: "https://github.com/KarewarGaurav/Path2Placement",
-    website: "https://www.path2placement.com/",
-    status: {
-      label: "Completed",
-      color: "text-emerald-900 font-bold",
-      bg: "bg-emerald-100",
-      dot: "bg-emerald-600",
-      border: "border-transparent"
-    },
-    imagePlaceholder: "bg-gradient-to-br from-indigo-500 to-purple-600",
-    coverImage: "/path2placement-preview.png",
-    video: null,
-  },
-  {
-    title: "AstraClean",
-    description: "Built a service platform with secure payment integration. Enabled booking, real-time data handling, and smooth transaction processing.",
-    techIcons: [
-      { name: "React", icon: SiReact, color: "#61DAFB" },
-      { name: "Node.js", icon: SiNodedotjs, color: "#339933" },
-      { name: "Firebase", icon: SiFirebase, color: "#FFCA28" },
-      { name: "PhonePe Gateway", icon: FaCreditCard, color: "#5F259F" }
-    ],
-    github: "",
-    website: "https://astraclean.cleanto.in/",
-    status: {
-      label: "Live",
-      color: "text-emerald-900 font-bold",
-      bg: "bg-emerald-100",
-      dot: "bg-emerald-600",
-      border: "border-transparent"
-    },
-    imagePlaceholder: "bg-gradient-to-br from-teal-500 to-emerald-700",
-    coverImage: "/astraclean-preview.png",
-    video: null,
-  },
-];
 
 /* ────────────────────────────────────────────────
    Full-Screen Video Modal
@@ -156,7 +70,6 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
     return () => { if (hideTimer.current) clearTimeout(hideTimer.current); };
   }, [resetHideTimer]);
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -283,7 +196,6 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
               style={{ cursor: "pointer" }}
             />
 
-            {/* Centered play/pause indicator */}
             <AnimatePresence>
               {!playing && (
                 <motion.div
@@ -300,7 +212,6 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
               )}
             </AnimatePresence>
 
-            {/* Controls overlay */}
             <AnimatePresence>
               {showControls && (
                 <motion.div
@@ -311,7 +222,6 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Progress bar */}
                   <div
                     ref={progressRef}
                     className="w-full h-1.5 bg-zinc-700 rounded-full mb-3 cursor-pointer group relative"
@@ -325,10 +235,8 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
                     </div>
                   </div>
 
-                  {/* Controls row */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {/* Play/Pause */}
                       <button
                         onClick={togglePlay}
                         className="text-white hover:text-zinc-300 transition-colors p-1 rounded"
@@ -336,7 +244,6 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
                         {playing ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" />}
                       </button>
 
-                      {/* Volume */}
                       <div className="flex items-center gap-2">
                         <button onClick={toggleMute} className="text-white hover:text-zinc-300 transition-colors p-1">
                           {muted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
@@ -352,13 +259,11 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
                         />
                       </div>
 
-                      {/* Time */}
                       <span className="text-xs text-zinc-300 font-mono select-none">
                         {currentTime} / {duration}
                       </span>
                     </div>
 
-                    {/* Fullscreen */}
                     <button
                       onClick={toggleFullscreen}
                       className="text-white hover:text-zinc-300 transition-colors p-1 rounded"
@@ -379,17 +284,9 @@ function VideoModal({ src, title, onClose }: { src: string; title: string; onClo
 /* ────────────────────────────────────────────────
    Project Card
 ──────────────────────────────────────────────── */
-function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: number }) {
+export function ProjectCard({ project, idx }: { project: Project; idx: number }) {
   const [isHovered, setIsHovered] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-
-  const handleMouseEnter = () => {
-    setIsHovered(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
 
   return (
     <>
@@ -404,22 +301,19 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
       </AnimatePresence>
 
       <motion.div
-        key={project.title}
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: idx * 0.1 }}
       >
         <Card className="flex flex-col h-full bg-[#0a0a0a] border-zinc-800/80 hover:border-zinc-700 transition-all duration-300 overflow-hidden group rounded-3xl hover:shadow-[0_0_30px_rgba(255,255,255,0.02)]">
-          {/* Image / Video Preview */}
           <StyledTooltip title={project.video ? "Click to Watch Demo" : "Project Preview"} arrow placement="top">
             <div
-              className={`h-[240px] w-full ${project.coverImage ? '' : project.imagePlaceholder} flex items-center justify-center relative overflow-hidden cursor-pointer`}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
+              className={`h-[240px] w-full ${project.coverImage ? '' : project.imagePlaceholder || 'bg-zinc-900'} flex items-center justify-center relative overflow-hidden cursor-pointer`}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
               onClick={() => project.video && setModalOpen(true)}
             >
-              {/* Cover image */}
               {project.coverImage && (
                 <img
                   src={project.coverImage}
@@ -428,7 +322,6 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
                   draggable={false}
                 />
               )}
-              {/* Badge for video projects */}
               {project.video && (
                 <div className="absolute top-4 right-4 z-30 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full flex items-center gap-2 group-hover:bg-white/20 transition-colors">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -436,7 +329,12 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
                 </div>
               )}
 
-              {/* Gradient overlay */}
+              {/* Category Badge */}
+              <div className="absolute top-4 left-4 z-30 px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
+                {project.category === 'AI' && <Sparkles size={12} className="text-blue-400" />}
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider">{project.category}</span>
+              </div>
+
               <div
                 className="absolute inset-0 transition-opacity duration-500"
                 style={{
@@ -445,7 +343,6 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
                 }}
               />
 
-              {/* Play button overlay */}
               {project.video && (
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center z-20"
@@ -466,43 +363,43 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
                 </motion.div>
               )}
 
-              {/* Subtle dark overlay */}
               <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-all duration-500 z-10" />
             </div>
           </StyledTooltip>
 
-          {/* Content */}
-          <CardContent className="flex flex-col flex-grow p-4 pt-4 bg-[#0a0a0a]">
-            {/* Title and Links */}
+          <CardContent className="flex flex-col flex-grow p-5 pt-5 bg-[#0a0a0a]">
             <div className="flex flex-row items-center justify-between mb-4">
               <h3 className="text-[22px] font-bold tracking-tight text-white">{project.title}</h3>
               <div className="flex items-center gap-3 text-zinc-400">
-                {project.website ? (
+                {project.website && (
                   <a href={project.website} target="_blank" rel="noreferrer" className="hover:text-zinc-100 transition-colors">
                     <Globe size={20} />
                   </a>
-                ) : (
-                  <Globe size={20} className="hover:text-zinc-100 cursor-pointer transition-colors" />
                 )}
-
-                {project.video && (
-                  <button
-                    onClick={() => setModalOpen(true)}
-                    className="hover:text-zinc-100 cursor-pointer transition-colors"
-                  >
-                    <Play size={20} />
-                  </button>
+                {project.github && (
+                  <a href={project.github} target="_blank" rel="noreferrer" className="hover:text-zinc-100 transition-colors">
+                    <Github size={20} />
+                  </a>
                 )}
               </div>
             </div>
 
-            {/* Description */}
-            <p className="text-[15px] text-zinc-400 leading-relaxed mb-6 flex-grow">
+            <p className="text-[15px] text-zinc-400 leading-relaxed mb-4">
               {project.description}
             </p>
 
-            {/* Technologies */}
-            <div className="mb-6 pt-2 flex-grow-0">
+            {project.points && (
+              <ul className="mb-6 space-y-2">
+                {project.points.map((point, i) => (
+                  <li key={i} className="flex items-start gap-2 text-[13px] text-zinc-500 leading-snug">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 mt-1.5 shrink-0" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mb-6 mt-auto">
               <p className="text-[14px] font-medium text-zinc-400 mb-3">Technologies</p>
               <div className="flex flex-wrap gap-2">
                 {project.techIcons.map((tech, i) => {
@@ -522,21 +419,32 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
               </div>
             </div>
 
-            {/* Footer Stats */}
-            <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center justify-between mt-4">
               <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${project.status.bg} border ${project.status.border} ${project.status.color}`}>
                 <div className={`w-2 h-2 rounded-full ${project.status.dot}`} />
-                <span className="text-[13px] font-semibold">{project.status.label}</span>
+                <span className="text-[13px] font-semibold whitespace-nowrap">{project.status.label}</span>
               </div>
 
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 text-[14px] font-medium text-zinc-100 hover:text-white transition-colors bg-transparent hover:bg-zinc-800/50 px-4 py-2 rounded-full border border-zinc-800"
-              >
-                View Project <ArrowRight size={16} />
-              </a>
+              {project.github && (
+                <a
+                  href={project.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-[14px] font-medium text-zinc-100 hover:text-white transition-colors bg-transparent hover:bg-zinc-800/50 px-4 py-2 rounded-full border border-zinc-800"
+                >
+                  View Repo <ArrowRight size={16} />
+                </a>
+              )}
+              {!project.github && project.website && (
+                <a
+                  href={project.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 text-[14px] font-medium text-zinc-100 hover:text-white transition-colors bg-transparent hover:bg-zinc-800/50 px-4 py-2 rounded-full border border-zinc-800"
+                >
+                  Live Demo <ArrowRight size={16} />
+                </a>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -549,6 +457,9 @@ function ProjectCard({ project, idx }: { project: (typeof projects)[0]; idx: num
    Section
 ──────────────────────────────────────────────── */
 export default function Projects() {
+  const aiProjects = projects.filter(p => p.category === 'AI').slice(0, 2);
+  const fullStackProjects = projects.filter(p => p.category === 'Full Stack' && (p.title === 'Zica-Zima CRM' || p.title === 'AstraClean')).slice(0, 2);
+
   return (
     <section id="projects" className="py-12">
       <motion.div
@@ -557,15 +468,52 @@ export default function Projects() {
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center gap-4 mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold">Featured Projects</h2>
-          <div className="h-px bg-border flex-grow max-w-[300px]" />
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Featured Work</h2>
+            <div className="h-px bg-zinc-800 flex-grow w-24 md:w-48" />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {projects.map((project, idx) => (
-            <ProjectCard key={project.title} project={project} idx={idx} />
-          ))}
+        {/* AI Projects Section */}
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <Sparkles size={20} className="text-blue-500" />
+            <h3 className="text-xl font-bold text-zinc-200 uppercase tracking-widest text-sm">AI Projects</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {aiProjects.map((project, idx) => (
+              <ProjectCard key={project.title} project={project} idx={idx} />
+            ))}
+          </div>
+        </div>
+
+        {/* Full Stack Projects Section */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-8">
+            <Globe size={20} className="text-emerald-500" />
+            <h3 className="text-xl font-bold text-zinc-200 uppercase tracking-widest text-sm">Full Stack Projects</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {fullStackProjects.map((project, idx) => (
+              <ProjectCard key={project.title} project={project} idx={idx} />
+            ))}
+          </div>
+        </div>
+
+        {/* View All Button */}
+        <div className="flex justify-center mt-12">
+          <Link href="/projects">
+            <Button 
+              variant="outline" 
+              className="group relative overflow-hidden rounded-full px-8 py-6 border-zinc-800 bg-[#0a0a0a] hover:border-zinc-600 transition-all duration-300"
+            >
+              <span className="relative z-10 flex items-center gap-2 text-lg font-semibold text-zinc-300 group-hover:text-white">
+                View All Projects <ArrowRight size={20} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 to-zinc-950 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </Button>
+          </Link>
         </div>
       </motion.div>
     </section>

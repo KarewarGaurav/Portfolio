@@ -12,17 +12,22 @@ export default function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-secondary-foreground text-sm md:text-base font-semibold tracking-widest uppercase mb-4">
+        <h2 className="text-secondary-foreground text-sm md:text-base font-normal tracking-widest uppercase mb-4">
           Hi, my name is
         </h2>
-        <h1 className="text-4xl md:text-7xl font-bold tracking-tight text-foreground mb-4">
+        <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-foreground mb-4">
           Gaurav Karewar.
         </h1>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-muted-foreground mb-6">
-          I build dynamic web experiences.
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-muted-foreground mb-6 leading-tight">
+          I build production ready AI systems with LLMs.
         </h1>
-        
-        
+
+        <p className="text-xs md:text-sm font-medium tracking-wide text-zinc-400 mb-2">
+          <span className="text-[#FF4D4D]">AI Full Stack Engineer</span>
+          <span className="mx-2 text-zinc-600">|</span>
+          <span className="text-[#A855F7]">AI Agents, RAG, Automation, LLM Integration</span>
+        </p>
+
         <div className="flex flex-wrap gap-4 mt-8">
           <a href="#contact" className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/50 hover:bg-zinc-800 transition-all group">
             <Mail className="text-lg text-[#FF4D4D] group-hover:scale-110 transition-transform" />

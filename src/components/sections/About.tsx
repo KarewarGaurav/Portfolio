@@ -18,19 +18,22 @@ export default function About() {
         
         <div className="text-muted-foreground text-lg leading-relaxed max-w-3xl space-y-6">
           <p>
-            I am a passionate <span className="text-foreground font-medium">Software Developer</span> with a strong willingness to learn and adapt to new technologies. I specialize in building responsive, scalable web applications using React.js and modern UI frameworks.
+            I build <span className="text-foreground font-medium">AI systems</span> and full stack applications.
           </p>
           <p>
-            I have experience in AI powered development and modern web development. I build applications using manual coding and use AI tools such as Cursor, Replit, and Lovable to improve development efficiency, speed up debugging, and optimize workflows. I work with JavaScript and React to create responsive and efficient web applications.
+            I work on AI agents, RAG systems, and automation workflows using LLMs. I use tools like n8n and LangChain to automate tasks and build real world systems.
           </p>
           <p>
-            My recent focus is on workflow automation and agentic AI using tools like n8n and frameworks such as LangChain. I also integrate REST APIs and design backend workflows to ensure fast and reliable data flow across systems.
+            I build end to end applications using React, Node.js, and Python. I design APIs, manage data flow, and deploy applications to production.
           </p>
           <p>
-            I build end to end web application features from user interface development to backend logic implementation. I focus on writing clean code, creating responsive interfaces, and ensuring efficient data handling.
+            I have experience integrating LLMs, vector databases, and external APIs to create scalable and reliable AI features.
           </p>
           <p>
-            I continuously improve my skills by exploring new technologies, AI driven development methods, and modern tools to build scalable and user focused applications.
+            I also use AI tools like Cursor and Claude Code to speed up development, improve debugging, and ship faster.
+          </p>
+          <p>
+            My focus is on building practical systems that automate workflows, reduce manual work, and solve real problems.
           </p>
         </div>
       </motion.div>

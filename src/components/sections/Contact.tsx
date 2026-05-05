@@ -66,9 +66,12 @@ export default function Contact() {
           {/* Contact Information */}
           <div className="flex flex-col space-y-8">
             <div>
-              <h3 className="text-3xl font-bold tracking-tight mb-4">Let's build something great together.</h3>
+              <h3 className="text-3xl font-bold tracking-tight mb-4">Let&apos;s build AI systems that solve real problems. 🤖🚀</h3>
               <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                I'm currently looking for new opportunities as a Software Developer. Whether you have a question, a project idea, or just want to say hi, I'll try my best to get back to you!
+                Let&apos;s build AI systems.
+              </p>
+              <p className="text-muted-foreground text-lg leading-relaxed max-w-md mt-4">
+                I work on AI agents, RAG systems, and automation using LLMs. Open to opportunities and collaborations.
               </p>
             </div>
 
